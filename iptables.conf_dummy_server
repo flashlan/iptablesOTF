@@ -1,5 +1,8 @@
-#/etc/novafirewall.conf
 #!/bin/bash
+
+# Server iptablesOTF template
+# Edit ans save before quit
+
 IPTABLES='/sbin/iptables'
 #nameservers.
 #cat /etc/resolv.conf|grep nameserver |cut -b 12-27 > /names

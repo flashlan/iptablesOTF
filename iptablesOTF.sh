@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 echo "Script is executed as : `whoami`"
 
@@ -6,6 +6,38 @@ var0=$(who am i | awk '{print $1}')
 echo "var0 is $var0"
 
 ##################################################
+
+PS3='Choose your firewal profile: '
+templates=("Workstation" "Server" "Blank" "Quit")
+select fav in "${templates[@]}"; do
+    case $fav in
+        "Workstation")
+            cp /home/$var0/.iptablesOTF/iptables.conf_dummy_workstation /home/$var0/.iptablesOTF/iptables.conf
+            #echo ""
+	    # optionally call a function or run some code here
+	    break
+            ;;
+        "Server")
+            cp /home/$var0/.iptablesOTF/iptables.conf_dummy_server /home/$var0/.iptablesOTF/iptables.conf
+            #echo ""
+	    # optionally call a function or run some code here
+	    break
+            ;;
+        "Blank")
+            cp /home/$var0/.iptablesOTF/iptables.conf_dummy_blank_template /home/$var0/.iptablesOTF/iptables.conf
+            #echo ""
+	    # optionally call a function or run some code here
+	    break
+            ;;
+	"Quit")
+	    echo "User requested exit"
+	    exit
+	    ;;
+        *) echo "invalid option $REPLY";;
+    esac
+done
+
+
 cd /home/$var0/.iptablesOTF
 cp /home/$var0/.iptablesOTF/iptables.conf /home/$var0/.iptablesOTF/backups/"iptables_orig-`date`.txt"
 #debug 
@@ -29,7 +61,7 @@ chmod +x /home/$var0/.iptablesOTF/iptables.conf
 echo "old rules are saved  /home/$var0/backups "
 
 # open new config to editing
-kate /home/$var0/.iptablesOTF/iptables.conf 
+xdg-open /home/$var0/.iptablesOTF/iptables.conf 
 echo "____________Done Editing!_____________"
 
 # executa configuracao
