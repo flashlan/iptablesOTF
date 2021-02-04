@@ -45,6 +45,7 @@ fi
 #cd /home/$var0/.iptablesOTF
 cp iptables.conf_dummy_workstation /home/$var0/.iptablesOTF/
 cp iptables.conf_dummy_server /home/$var0/.iptablesOTF/
+cp iptables.conf_dummy_blank_template /home/$var0/.iptablesOTF/
 
 #adjust permissions
 cd /home/$var0 #/.iptablesOTF/backups
