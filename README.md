@@ -12,6 +12,13 @@ It does, in a order:
 
 There are two dummy files in ~/.firewall folder with templates that you can use and modify  to configure your iptables firewall according to use: workstation or server.
 
+__Features__
+-----------
+You can choose between some pre-configured tamplates or start from a blank iptables.conf file
 
-Install:
+__Install:__
+-----------
 run "./install.sh" as root (using Sudo/Doas)
+
+TODO: 
+- [ ] make a wizard.
