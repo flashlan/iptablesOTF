@@ -10,7 +10,7 @@ It does, in a order:
  * Open your default editor to edit rules.
  * After editing and close editor, the script restart desidered services. 
 
-There are two dummy files in ~/.firewall folder with templates that you can use and modify  to configure your iptables firewall
+There are two dummy files in ~/.firewall folder with templates that you can use and modify  to configure your iptables firewall according to use: workstation or server.
 
 
 Install:
