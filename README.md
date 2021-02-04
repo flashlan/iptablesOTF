@@ -11,3 +11,7 @@ It does, in a order:
  * After editing and close editor, the script restatrt services 
 
 There are two dummy files in ~/.firewall folder with templates that you can use and modify  to configure your iptables firewall
+
+
+Install:
+run: ./install.sh as root (using Sudo/Doas)
