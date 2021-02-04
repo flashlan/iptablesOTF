@@ -1,0 +1,116 @@
+#/etc/novafirewall.conf
+#!/bin/bash
+IPTABLES='/sbin/iptables'
+#nameservers.
+#cat /etc/resolv.conf|grep nameserver |cut -b 12-27 > /names
+#nameserver=`cat /names`
+## nameserver=192.168.1.253
+## nameserver2=192.168.2.1
+nameserver=8.8.8.8
+#[Flush]
+iptables -F
+iptables -X
+
+#[Set interface values]
+## ip link
+EXTIF='eth0'
+## INTIF1='eth1'
+
+#[flush rules and delete chains]
+$IPTABLES -F
+$IPTABLES -X
+
+## for 2 interfaces (servers)
+######################## ver aqui interfaces
+## [enable masquerading to allow LAN internet access]
+##  $IPTABLES -t nat -A POSTROUTING -o $EXTIF -j MASQUERADE
+
+## [forward LAN traffic from $INTIF1 to Internet interface $EXTIF]
+##  $IPTABLES -A FORWARD -i $INTIF1 -o $EXTIF -m state --state NEW,ESTABLISHED -j ACCEPT
+######################
+
+
+#[Por defeito só fica aberto o que for libertado mais À frente]
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
+
+#[Loopback]
+iptables -A INPUT -i lo -s localhost -j ACCEPT
+iptables -A OUTPUT -o lo -d localhost -j ACCEPT
+
+#[Permitir nameservers]
+iptables -A INPUT -s $nameserver -j ACCEPT
+iptables -A OUTPUT -d $nameserver -j ACCEPT
+
+#[Tráfico permitido]
+iptables -A INPUT -p tcp -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -p tcp -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+#[forwarding]
+iptables -A FORWARD -i eth0 -j ACCEPT
+iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+#ACCEPT [2022 SSHD,  www Apache]
+iptables -A INPUT -p tcp --dport 2022  -m state --state NEW,ESTABLISHED,RELATED -j LOG --log-prefix "INCOMING"
+iptables -A INPUT -p tcp --dport 2022  -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+#iptables -A INPUT -p tcp -s 192.168.1.124 --dport www  -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+#iptables -A OUTPUT -p tcp -d 192.168.1.124 --sport www   -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -p tcp --dport www  -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+#[AddrSpoof]
+iptables -A FORWARD -s 192.168.1.0/24 -i eth0 -j DROP
+
+#[SYN-Flood Attack:]
+iptables -A FORWARD -p tcp --syn -m limit --limit 1/s -j ACCEPT
+iptables -A INPUT -p udp -s 0/0 -i eth0 --dport 33435:33525 -j DROP
+
+#[Anti-scanners]
+iptables -A INPUT -p tcp --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 1/s -j ACCEPT
+
+#[Bloqueamento do trace route]
+iptables -A INPUT -p udp -s 0/0 -i eth0 --dport 33435:33525 -j DROP
+
+#[Proteção básica contra ataques]
+iptables -A INPUT -m state --state INVALID -j DROP
+iptables -A OUTPUT -p tcp ! --tcp-flags SYN,RST,ACK SYN -m state --state NEW -j DROP
+
+#[Ping of Death]
+iptables -A FORWARD -p icmp --icmp-type echo-request -m limit --limit 1/s -j ACCEPT
+
+#[Wincrash]
+iptables -A INPUT -p tcp --dport 5042 -j LOG --log-prefix " Wincrash"
+#[BackOrifice]
+iptables -A INPUT -p tcp --dport 12345 -j LOG --log-prefix "BackOrifice"
+
+#Proteção contra Syn-floods
+iptables -A FORWARD -p tcp --syn -m limit --limit 1/s -j ACCEPT
+
+#[FTP] com portas passivas da 60000 à 60020
+iptables -A OUTPUT -p tcp --sport 60000:60020 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -p tcp -m state --state NEW,ESTABLISHED,RELATED --dport 60000:60020 -j ACCEPT
+iptables -A INPUT -p tcp --dport ftp -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -p tcp --dport ftp  -m state --state NEW,ESTABLISHED,RELATED -j LOG --log-prefix "INCOMING_FTP"
+
+#Permissao do Nameserver
+##iptables -A INPUT -s $nameserver2 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+##iptables -A OUTPUT -d $nameserver2 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -s $nameserver -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -d $nameserver -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+#[Proxy Squid]
+## iptables -t nat -A PREROUTING -i eth1 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 3128
+## iptables -A INPUT -s 192.168.1.0/24 -d 192.168.2.1 -p tcp --dport 3128 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+## iptables -A OUTPUT -p tcp -s 192.168.1.0/24 -d ! 192.168.1.0/24 --dport 135 -j DROP
+## iptables -A OUTPUT -p udp -s 192.168.1.0/24 -d ! 192.168.1.0/24 --dport 135 -j DROP
+
+#[permissão de whois e ping]
+iptables -A INPUT -p tcp -s 192.168.1.0/24 -d 192.168.1.0/24 --dport 43 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -p tcp -s 192.168.1.0/24 -d 192.168.1.0/24 --dport 42 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+#[SAMBA]
+## iptables -A INPUT -i eth0 -p tcp -s 192.168.1.0/24 -d 192.168.1.0/24 --destination-port 139 -j ACCEPT  # Samba
+## iptables -A INPUT -i eth0 -p tcp -s 192.168.1.0/24 -d 192.168.1.0/24 --destination-port 445 -j ACCEPT  # Samba
+## iptables -A INPUT -i eth0 -p udp -s 192.168.1.0/24 -d 192.168.1.0/24 --destination-port 137 -j ACCEPT  # Samba
+## iptables -A INPUT -i eth0 -p udp -s 192.168.1.0/24 -d 192.168.1.0/24 --destination-port 138 -j ACCEPT  # Samba
