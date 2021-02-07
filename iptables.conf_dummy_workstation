@@ -35,6 +35,11 @@ iptables -A OUTPUT -p tcp -m tcp --dport 5222 -m comment --comment "JABBER" -j A
 iptables -A OUTPUT -p tcp -m tcp --dport 8001 -m comment --comment "IRC" -j ACCEPT
 iptables -A OUTPUT -p tcp -m tcp --dport 8010 -m comment --comment "JABBER FT" -j ACCEPT
 
+#DLNA
+iptables -A OUTPUT -p tcp -m tcp --dport 5001 -j ACCEPT
+iptables -A INPUT -p udp -m udp--dport 1900 -j ACCEPT
+iptables -A OUTPUT -p tcp -m tcp --dport 8200 -j ACCEPT
+
 # allow icmp packets (e.g. ping...)
 iptables -A INPUT -p icmp -m state --state NEW -j ACCEPT
 
